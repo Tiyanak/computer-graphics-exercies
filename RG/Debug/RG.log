@@ -1,3 +1,23 @@
-﻿  main.cpp
+﻿  main2.cpp
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(169): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(252): warning C4244: 'argument': conversion from 'float' to 'GLubyte', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(292): warning C4244: 'argument': conversion from 'float' to 'GLubyte', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(351): warning C4018: '<': signed/unsigned mismatch
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(351): warning C4018: '>=': signed/unsigned mismatch
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(389): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(390): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(391): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(393): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(402): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(403): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(404): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(422): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(423): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(424): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(434): warning C4244: '=': conversion from 'GLdouble' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(435): warning C4244: '=': conversion from 'GLdouble' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(436): warning C4244: '=': conversion from 'GLdouble' to 'float', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(448): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\igor farszky\visual studio 2015\projects\rg\rg\main2.cpp(449): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
   RG.vcxproj -> C:\Users\Igor Farszky\visual studio 2015\Projects\RG\Debug\RG.exe
   RG.vcxproj -> C:\Users\Igor Farszky\visual studio 2015\Projects\RG\Debug\RG.pdb (Partial PDB)
