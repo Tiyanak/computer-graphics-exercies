@@ -46,7 +46,7 @@ typedef struct _Ociste {
 Ociste ociste = { 0.0, 50.0, -200.0 };
 Ociste glediste = { 0.0, 0.0, 0.0 };
 float velocity = 0.0, gravity = 0.5;
-int brojCestica = 500, brojCesticaVatre = 100;
+int brojCestica = 500, brojCesticaVatre = 500, brojCesticaDima = 500;
 float sizeIzvora = 200, sizeCestice = 1.0f;
 
 //*********************************************************************************
@@ -94,6 +94,7 @@ public:
 
 Izvor izvor = Izvor(0.0f, 100.0f, 0.0f, 0.0f, 0.0f, 255.0f, sizeIzvora);
 Izvor izvorVatre = Izvor(0.0f, 0.0f, 0.0f, 255.0f, 102.0f, 0.0f, 3.0f);
+Izvor izvorDima = Izvor(0.0f, 30.0f, 0.0f, 255.0f, 102.0f, 0.0f, 3.0f);
 
 class Cestica {
 	public:
@@ -107,9 +108,9 @@ class Cestica {
 			this->pozicija = new Vertex(randPositionX+izvor.pozicija->x, izvor.pozicija->y, randPositionZ+izvor.pozicija->z);
 			this->v = velocity; this->g = gravity; this->alive = true, this->life = 1.0f;
 		}
-		Cestica(float life) {
+		Cestica(float life, float izvorX, float izvorY, float izvorZ) {
 			this->boja = new Vertex(255, 102, 0);
-			this->pozicija = new Vertex(izvorVatre.pozicija->x, izvorVatre.pozicija->y, izvorVatre.pozicija->z);
+			this->pozicija = new Vertex(izvorX, izvorY, izvorZ);
 			this->v = velocity; this->g = gravity; this->alive = true, this->life = life;
 		}
 };
@@ -146,8 +147,8 @@ void myIdle();
 void init();
 
 void myObject();
-void myParticle(Cestica cestica, int index); void myFireParticle(Cestica c, int index, BOOLEAN pomakni);
-void myParticleSystem(); void myFireSystem();
+void myParticle(Cestica cestica, int index); void myFireParticle(Cestica c, int index); void mySmokeParticle(Cestica c, int index);
+void myParticleSystem(); void myFireSystem(); void mySmokeSystem();
 void mySource();
 void drawSource(Izvor i);
 void drawGround(FloorGrid fg);
@@ -159,9 +160,8 @@ GLuint loadTexture(const char *filename);
 //	Glavni program.
 //*********************************************************************************
 
-GLuint tekstura, fb, depth_rb;
-vector<Cestica> cestice;
-vector<Cestica> cesticeVatre;
+GLuint tekstura, fb, depth_rb, teksturaVatre, teksturaDima;
+vector<Cestica> cestice, cesticeVatre, cesticeDima;
 int currentTime = 0, previousTime = 0, t = 0;
 
 int main(int argc, char** argv) {
@@ -189,16 +189,21 @@ int main(int argc, char** argv) {
 	ilutRenderer(ILUT_OPENGL);
 
 	tekstura = loadTexture("particles/snow.bmp");
+	teksturaVatre = loadTexture("particles/explosion.bmp");
+	teksturaDima = loadTexture("particles/smoke.bmp");
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);					// Set The Blending Function For Translucency
 	glEnable(GL_BLEND);
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, tekstura);
-
-	GLuint tex;
+	GLuint tex, texFire, texSmoke;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
+
+	glGenTextures(2, &texFire);
+	glBindTexture(GL_TEXTURE_2D, texFire);
+
+	glGenTextures(3, &texSmoke);
+	glBindTexture(GL_TEXTURE_2D, texSmoke);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -217,7 +222,7 @@ int main(int argc, char** argv) {
 void myDisplay(void)
 {
 	
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);		         // boja pozadine - bijela
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);		         // boja pozadine - bijela
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
@@ -226,7 +231,8 @@ void myDisplay(void)
 	drawSource(izvorVatre);
 
 	myParticleSystem();
-	/*myFireSystem();*/
+	myFireSystem();
+	mySmokeSystem();
 
 	glutSwapBuffers();
 
@@ -358,19 +364,15 @@ void myParticleSystem() {
 }
 
 void myFireSystem() {
-	int randNum = rand() % 10;
-
-	if (randNum == 0) {
-		for (int i = 0; i < brojCesticaVatre; i++) {
-			myFireParticle(cesticeVatre.at(i), i, TRUE);
-		}
+	for (int i = 0; i < brojCesticaVatre; i++) {
+		myFireParticle(cesticeVatre.at(i), i);
 	}
-	else {
-		for (int i = 0; i < brojCesticaVatre; i++) {
-			myFireParticle(cesticeVatre.at(i), i, FALSE);
-		}
-	}
+}
 
+void mySmokeSystem() {
+	for (int i = 0; i < brojCesticaDima; i++) {
+		mySmokeParticle(cesticeDima.at(i), i);
+	}
 }
 
 void drawSquare(Cestica c) {
@@ -384,35 +386,145 @@ void drawSquare(Cestica c) {
 
 }
 
-void myFireParticle(Cestica c, int index, BOOLEAN pomakni) {
+void myFireParticle(Cestica c, int index) {
 
 	int x = c.pozicija->x;
 	int y = c.pozicija->y;
 	int z = c.pozicija->z;
 
+	// Draw particles
+	glPushMatrix();
+	glColor3ub((int)c.boja->x, (int)c.boja->y, (int)c.boja->z);
+
+	Vertex s(0.0, 0.0, 1.0);
+	Vertex os(0.0, 0.0, 0.0);
+	Vertex e(0.0, 0.0, 0.0);
+
+	e.x = -ociste.x;
+	e.y = -ociste.y;
+	e.z = -ociste.z;
+
+	os.x = s.y*e.z - e.y*s.z;
+	os.y = e.x*s.z - s.x*e.z;
+	os.z = s.x*e.y - s.y*e.x;
+
+	double apsS = pow(pow((double)s.x, 2.0) + pow((double)s.y, 2.0) + pow((double)s.z, 2.0), 0.5);
+	double apsE = pow(pow((double)e.x, 2.0) + pow((double)e.y, 2.0) + pow((double)e.z, 2.0), 0.5);
+	double se = s.x*e.x + s.y*e.y + s.z*e.z;
+	double kut = acos(se / (apsS*apsE));
+	kut *= 180.0f / glm::pi<float>();
+
 	glTranslatef(x, y, z);
+	glRotatef(kut, os.x, os.y, os.z);
+
+	glBindTexture(GL_TEXTURE_2D, teksturaVatre);
+	glEnable(GL_TEXTURE_2D);
 
 	drawSquare(c);
 
-	if (pomakni) {
-		int dx = rand() % 20 - 10;
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_BLEND);
+
+	glPopMatrix();
+
+	int pomakni = rand() % 20;
+
+	if (pomakni < 1) {
+		int dx = rand() % 3 - 1;
 		int dy = rand() % 2;
-		int dz = rand() % 20 - 10;
+		int dz = rand() % 3 - 1;
 
-		c.pozicija->x = dx;
+		c.pozicija->x = x + dx;
 		c.pozicija->y = y + dy;
-		c.pozicija->z = dz;
+		c.pozicija->z = z + dz;
+
+		float lifethreshold = (float)(c.pozicija->y - izvorVatre.pozicija->y) / 30.0f;
+		c.life = 1.0 - lifethreshold;
+		c.boja->y = 255.0f - 255.0f * c.life;
+		if (index == 0) {
+			cout << c.life << " : (" << c.boja->x << ", " << c.boja->y << ", " << c.boja->z << ")\n";
+		}
+		
 	}
-
-	c.life = c.life - (1.0f / ((float)(rand() % 20)));
-	c.boja->z = 255.0f - 255.0f * c.life;
-	c.boja->y = 255.0f - 255.0f * c.life;
-
-	if (c.life <= 0.0f) {
-		cesticeVatre.at(index) = Cestica(1.0f);
+	
+	if (c.life <= 0.0 && index < brojCesticaVatre) {
+		cesticeVatre.at(index) = Cestica(1.0f, izvorVatre.pozicija->x, izvorVatre.pozicija->y, izvorVatre.pozicija->z);
+	}
+	else if (index >= brojCesticaVatre) {
+		cesticeVatre.pop_back();
 	}
 	else {
 		cesticeVatre.at(index) = c;
+	}
+
+}
+
+void mySmokeParticle(Cestica c, int index) {
+
+	int x = c.pozicija->x;
+	int y = c.pozicija->y;
+	int z = c.pozicija->z;
+
+	// Draw particles
+	glPushMatrix();
+	glColor3ub((int)c.boja->x, (int)c.boja->y, (int)c.boja->z);
+
+	Vertex s(0.0, 0.0, 1.0);
+	Vertex os(0.0, 0.0, 0.0);
+	Vertex e(0.0, 0.0, 0.0);
+
+	e.x = -ociste.x;
+	e.y = -ociste.y;
+	e.z = -ociste.z;
+
+	os.x = s.y*e.z - e.y*s.z;
+	os.y = e.x*s.z - s.x*e.z;
+	os.z = s.x*e.y - s.y*e.x;
+
+	double apsS = pow(pow((double)s.x, 2.0) + pow((double)s.y, 2.0) + pow((double)s.z, 2.0), 0.5);
+	double apsE = pow(pow((double)e.x, 2.0) + pow((double)e.y, 2.0) + pow((double)e.z, 2.0), 0.5);
+	double se = s.x*e.x + s.y*e.y + s.z*e.z;
+	double kut = acos(se / (apsS*apsE));
+	kut *= 180.0f / glm::pi<float>();
+
+	glTranslatef(x, y, z);
+	glRotatef(kut, os.x, os.y, os.z);
+
+	glBindTexture(GL_TEXTURE_2D, teksturaDima);
+	glEnable(GL_TEXTURE_2D);
+
+	drawSquare(c);
+
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_BLEND);
+
+	glPopMatrix();
+
+	int pomakni = rand() % 40;
+
+	if (pomakni < 1) {
+		int dx = rand() % 5 - 3;
+		int dy = rand() % 2;
+		int dz = rand() % 5 - 3;
+
+		c.pozicija->x = x + dx;
+		c.pozicija->y = y + dy;
+		c.pozicija->z = z + dz;
+
+		float lifethreshold = (float)(c.pozicija->y - izvorDima.pozicija->y) / 30.0f;
+		c.life = 1.0 - lifethreshold;
+		c.boja->y = 255.0f - 255.0f * c.life;
+
+	}
+
+	if (c.life <= 0.0 && index < brojCesticaDima) {
+		cesticeDima.at(index) = Cestica(1.0f, izvorDima.pozicija->x, izvorDima.pozicija->y, izvorDima.pozicija->z);
+	}
+	else if (index >= brojCesticaDima) {
+		cesticeDima.pop_back();
+	}
+	else {
+		cesticeDima.at(index) = c;
 	}
 
 }
@@ -425,7 +537,7 @@ void myParticle(Cestica c, int index) {
 
 	// Draw particles
 	glPushMatrix();
-	glColor3f(c.boja->x, c.boja->y, c.boja->z);
+	glColor3ub((int)c.boja->x, (int)c.boja->y, (int)c.boja->z);
 
 	Vertex s(0.0, 0.0, 1.0);
 	Vertex os(0.0, 0.0, 0.0);
@@ -607,7 +719,11 @@ void init() {
 	}
 
 	for (int i = 0; i < brojCesticaVatre; i++) {
-		cesticeVatre.push_back(Cestica(1.0f));
+		cesticeVatre.push_back(Cestica(1.0f, izvorVatre.pozicija->x, izvorVatre.pozicija->y, izvorVatre.pozicija->z));
+	}
+
+	for (int i = 0; i < brojCesticaDima; i++) {
+		cesticeDima.push_back(Cestica(1.0f, izvorDima.pozicija->x, izvorDima.pozicija->y, izvorDima.pozicija->z));
 	}
 
 }
